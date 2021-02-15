@@ -1,9 +1,13 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnDestroy,
+  OnInit,
+} from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import {
   ActiveCartService,
   Address,
-  B2BAddress,
   CheckoutCostCenterService,
   CheckoutDeliveryService,
   PaymentTypeService,
@@ -11,14 +15,8 @@ import {
   UserAddressService,
   UserCostCenterService,
 } from '@spartacus/core';
-import { combineLatest, Observable } from 'rxjs';
-import {
-  distinctUntilChanged,
-  map,
-  switchMap,
-  take,
-  tap,
-} from 'rxjs/operators';
+import { combineLatest, Observable, Subscription } from 'rxjs';
+import { distinctUntilChanged, map, switchMap, tap } from 'rxjs/operators';
 import { Card } from '../../../../shared/components/card/card.component';
 import { CheckoutStepService } from '../../services/checkout-step.service';
 
@@ -32,12 +30,14 @@ export interface CardWithAddress {
   templateUrl: './shipping-address.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ShippingAddressComponent implements OnInit {
+export class ShippingAddressComponent implements OnInit, OnDestroy {
   addressFormOpened = false;
   forceLoader = false; // this helps with smoother steps transition
   selectedAddress: Address;
   doneAutoSelect = false;
   isAccountPayment = false;
+
+  protected subscriptions = new Subscription();
 
   constructor(
     protected userAddressService: UserAddressService,
@@ -106,7 +106,7 @@ export class ShippingAddressComponent implements OnInit {
     );
   }
 
-  getSupportedAddresses(): Observable<Address[] | B2BAddress[]> {
+  getSupportedAddresses(): Observable<Address[]> {
     if (this.isAccountPayment) {
       return this.checkoutCostCenterService.getCostCenter().pipe(
         distinctUntilChanged(),
@@ -115,9 +115,8 @@ export class ShippingAddressComponent implements OnInit {
           return this.userCostCenterService.getCostCenterAddresses(selected);
         })
       );
-    } else {
-      return this.userAddressService.getAddresses();
     }
+    return this.userAddressService.getAddresses();
   }
 
   selectDefaultAddress(addresses: Address[], selected: Address) {
@@ -147,10 +146,12 @@ export class ShippingAddressComponent implements OnInit {
       this.userCostCenterService &&
       this.checkoutCostCenterService
     ) {
-      this.paymentTypeService
-        .isAccountPayment()
-        .pipe(take(1))
-        .subscribe((isAccount) => (this.isAccountPayment = isAccount));
+      this.subscriptions.add(
+        this.paymentTypeService
+          .isAccountPayment()
+          .pipe(distinctUntilChanged())
+          .subscribe((isAccount) => (this.isAccountPayment = isAccount))
+      );
     }
 
     if (!this.isGuestCheckout && !this.isAccountPayment) {
@@ -191,7 +192,12 @@ export class ShippingAddressComponent implements OnInit {
 
   addAddress(address: Address): void {
     this.forceLoader = true;
-    this.checkoutDeliveryService.createAndSetAddress(address);
+    if (Boolean(address)) {
+      this.checkoutDeliveryService.createAndSetAddress(address);
+    } else {
+      this.forceLoader = false;
+      this.next();
+    }
   }
 
   showNewAddressForm(): void {
@@ -211,5 +217,9 @@ export class ShippingAddressComponent implements OnInit {
 
   back(): void {
     this.checkoutStepService.back(this.activatedRoute);
+  }
+
+  ngOnDestroy() {
+    this.subscriptions.unsubscribe();
   }
 }

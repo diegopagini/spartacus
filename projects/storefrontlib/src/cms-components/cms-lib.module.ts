@@ -25,6 +25,8 @@ import {
   OrderHistoryModule,
   OrderReturnModule,
   PaymentMethodsModule,
+  ReplenishmentOrderDetailsModule,
+  ReplenishmentOrderHistoryModule,
   ResetPasswordModule,
   ReturnRequestDetailModule,
   ReturnRequestListModule,
@@ -39,7 +41,10 @@ import {
   NavigationModule,
   SearchBoxModule,
 } from './navigation/index';
-import { OrderConfirmationModule } from './order-confirmation/index';
+import {
+  OrderConfirmationModule,
+  ReplenishmentOrderConfirmationModule,
+} from './order-confirmation/index';
 import {
   ProductCarouselModule,
   ProductFacetNavigationModule,
@@ -52,10 +57,12 @@ import {
 import { ProductImagesModule } from './product/product-images/product-images.module';
 import { ProductSummaryModule } from './product/product-summary/product-summary.module';
 import { ProductVariantsModule } from './product/product-variants/product-variants.module';
-import { StoreFinderModule } from './storefinder/store-finder.module';
 import { UserComponentModule } from './user/user.module';
 import { WishListModule } from './wish-list/wish-list.module';
 
+/**
+ * @deprecated since 3.1, use individual imports instead
+ */
 @NgModule({
   imports: [
     AnonymousConsentManagementBannerModule,
@@ -92,7 +99,6 @@ import { WishListModule } from './wish-list/wish-list.module';
     CartComponentModule,
     TabParagraphContainerModule,
     OrderConfirmationModule,
-    StoreFinderModule,
     ProductImagesModule,
     ProductSummaryModule,
     ProductVariantsModule,
@@ -107,6 +113,9 @@ import { WishListModule } from './wish-list/wish-list.module';
     NotificationPreferenceModule,
     MyInterestsModule,
     StockNotificationModule,
+    ReplenishmentOrderHistoryModule,
+    ReplenishmentOrderConfirmationModule,
+    ReplenishmentOrderDetailsModule,
   ],
 })
 export class CmsLibModule {}

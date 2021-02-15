@@ -9,7 +9,7 @@ import {
   mergeMap,
   switchMap,
 } from 'rxjs/operators';
-import { AuthActions } from '../../../auth/store/actions/index';
+import { AuthActions } from '../../../auth/user-auth/store/actions/index';
 import { CartActions } from '../../../cart/store/actions/index';
 import { CheckoutDetails } from '../../../checkout/models/checkout.model';
 import { GlobalMessageActions } from '../../../global-message/store/actions/index';
@@ -17,8 +17,7 @@ import { OCC_USER_ID_ANONYMOUS } from '../../../occ/utils/occ-constants';
 import { SiteContextActions } from '../../../site-context/store/actions/index';
 import { UserActions } from '../../../user/store/actions/index';
 import { normalizeHttpError } from '../../../util/normalize-http-error';
-import { makeErrorSerializable } from '../../../util/serialization-utils';
-import { withdrawOn } from '../../../util/withdraw-on';
+import { withdrawOn } from '../../../util/rxjs/withdraw-on';
 import { CheckoutConnector } from '../../connectors/checkout/checkout.connector';
 import { CheckoutCostCenterConnector } from '../../connectors/cost-center/checkout-cost-center.connector';
 import { CheckoutDeliveryConnector } from '../../connectors/delivery/checkout-delivery.connector';
@@ -75,7 +74,7 @@ export class CheckoutEffects {
           catchError((error) =>
             of(
               new CheckoutActions.AddDeliveryAddressFail(
-                makeErrorSerializable(error)
+                normalizeHttpError(error)
               )
             )
           )
@@ -115,7 +114,7 @@ export class CheckoutEffects {
           catchError((error) =>
             of(
               new CheckoutActions.SetDeliveryAddressFail(
-                makeErrorSerializable(error)
+                normalizeHttpError(error)
               )
             )
           )
@@ -141,7 +140,7 @@ export class CheckoutEffects {
           catchError((error) =>
             of(
               new CheckoutActions.LoadSupportedDeliveryModesFail(
-                makeErrorSerializable(error)
+                normalizeHttpError(error)
               )
             )
           )
@@ -213,9 +212,7 @@ export class CheckoutEffects {
           }),
           catchError((error) =>
             of(
-              new CheckoutActions.SetDeliveryModeFail(
-                makeErrorSerializable(error)
-              )
+              new CheckoutActions.SetDeliveryModeFail(normalizeHttpError(error))
             )
           )
         );
@@ -249,7 +246,7 @@ export class CheckoutEffects {
           catchError((error) =>
             of(
               new CheckoutActions.CreatePaymentDetailsFail(
-                makeErrorSerializable(error)
+                normalizeHttpError(error)
               )
             )
           )
@@ -278,7 +275,7 @@ export class CheckoutEffects {
           catchError((error) =>
             of(
               new CheckoutActions.SetPaymentDetailsFail(
-                makeErrorSerializable(error)
+                normalizeHttpError(error)
               )
             )
           )
@@ -298,14 +295,14 @@ export class CheckoutEffects {
     map((action: any) => action.payload),
     mergeMap((payload) => {
       return this.checkoutConnector
-        .placeOrder(payload.userId, payload.cartId)
+        .placeOrder(payload.userId, payload.cartId, payload.termsChecked)
         .pipe(
           switchMap((data) => [
             new CartActions.RemoveCart({ cartId: payload.cartId }),
             new CheckoutActions.PlaceOrderSuccess(data),
           ]),
           catchError((error) =>
-            of(new CheckoutActions.PlaceOrderFail(makeErrorSerializable(error)))
+            of(new CheckoutActions.PlaceOrderFail(normalizeHttpError(error)))
           )
         );
     }),
@@ -330,7 +327,7 @@ export class CheckoutEffects {
           catchError((error) =>
             of(
               new CheckoutActions.LoadCheckoutDetailsFail(
-                makeErrorSerializable(error)
+                normalizeHttpError(error)
               )
             )
           )
@@ -371,7 +368,7 @@ export class CheckoutEffects {
           catchError((error) =>
             of(
               new CheckoutActions.ClearCheckoutDeliveryAddressFail(
-                makeErrorSerializable(error)
+                normalizeHttpError(error)
               )
             )
           )
@@ -403,7 +400,7 @@ export class CheckoutEffects {
             from([
               new CheckoutActions.ClearCheckoutDeliveryModeFail({
                 ...payload,
-                error: makeErrorSerializable(error),
+                error: normalizeHttpError(error),
               }),
               new CartActions.LoadCart({
                 cartId: payload.cartId,
@@ -420,9 +417,8 @@ export class CheckoutEffects {
   setCostCenter$: Observable<
     | CheckoutActions.SetCostCenterSuccess
     | CheckoutActions.SetCostCenterFail
-    | CheckoutActions.ClearCheckoutDeliveryMode
     | CheckoutActions.ClearCheckoutDeliveryAddress
-    | CartActions.LoadCartSuccess
+    | CartActions.LoadCart
   > = this.actions$.pipe(
     ofType(CheckoutActions.SET_COST_CENTER),
     map((action: CheckoutActions.SetCostCenter) => action.payload),
@@ -430,18 +426,12 @@ export class CheckoutEffects {
       return this.checkoutCostCenterConnector
         .setCostCenter(payload.userId, payload.cartId, payload.costCenterId)
         .pipe(
-          mergeMap((data) => [
-            // TODO(#8877): We should trigger load cart not already assign the data. We might have misconfiguration between this cart model and load cart model
-            new CartActions.LoadCartSuccess({
-              cart: data,
+          mergeMap((_data) => [
+            new CartActions.LoadCart({
               cartId: payload.cartId,
               userId: payload.userId,
             }),
             new CheckoutActions.SetCostCenterSuccess(payload.costCenterId),
-            new CheckoutActions.ClearCheckoutDeliveryMode({
-              userId: payload.userId,
-              cartId: payload.cartId,
-            }),
             new CheckoutActions.ClearCheckoutDeliveryAddress({
               userId: payload.userId,
               cartId: payload.cartId,

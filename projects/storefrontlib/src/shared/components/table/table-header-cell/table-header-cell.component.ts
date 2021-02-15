@@ -7,6 +7,7 @@ import {
 } from '../table.model';
 
 @Component({
+  selector: 'cx-table-header-cell',
   template: `{{ header || (localizedHeader | cxTranslate) }}`,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -35,7 +36,7 @@ export class TableHeaderCellComponent {
   get localizedHeader(): string {
     return (
       (this.fieldOptions?.label as TableHeader)?.i18nKey ||
-      `${this.type}.${this.field}`
+      `${this.i18nRoot}.${this.field}`
     );
   }
 
@@ -49,5 +50,9 @@ export class TableHeaderCellComponent {
 
   protected get type(): string {
     return this.outlet?.context?._type;
+  }
+
+  protected get i18nRoot(): string {
+    return this.outlet?.context?._i18nRoot;
   }
 }

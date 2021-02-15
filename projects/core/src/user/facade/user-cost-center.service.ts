@@ -2,8 +2,9 @@ import { Injectable } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Observable, queueScheduler } from 'rxjs';
 import { filter, map, observeOn, tap } from 'rxjs/operators';
-import { AuthService } from '../../auth/facade/auth.service';
-import { B2BAddress, CostCenter } from '../../model/org-unit.model';
+import { UserIdService } from '../../auth/user-auth/facade/user-id.service';
+import { Address } from '../../model/address.model';
+import { CostCenter } from '../../model/org-unit.model';
 import { OCC_USER_ID_ANONYMOUS } from '../../occ/utils/occ-constants';
 import { StateWithProcess } from '../../process/store/process-state';
 import { LoaderState } from '../../state/utils/loader/loader-state';
@@ -17,14 +18,14 @@ import { StateWithUser } from '../store/user-state';
 export class UserCostCenterService {
   constructor(
     protected store: Store<StateWithUser | StateWithProcess<void>>,
-    protected authService: AuthService
+    protected userIdService: UserIdService
   ) {}
 
   /**
    * Load all visible active cost centers for the currently login user
    */
   loadActiveCostCenters(): void {
-    this.authService.invokeWithUserId((userId) => {
+    this.userIdService.invokeWithUserId((userId) => {
       if (userId && userId !== OCC_USER_ID_ANONYMOUS) {
         this.store.dispatch(new UserActions.LoadActiveCostCenters(userId));
       }
@@ -57,7 +58,7 @@ export class UserCostCenterService {
    * Get the addresses of the cost center's unit based on cost center id
    * @param costCenterId cost center id
    */
-  getCostCenterAddresses(costCenterId: string): Observable<B2BAddress[]> {
+  getCostCenterAddresses(costCenterId: string): Observable<Address[]> {
     return this.getActiveCostCenters().pipe(
       map((costCenters) => {
         const costCenter = costCenters.find((cc) => cc.code === costCenterId);

@@ -48,6 +48,10 @@ export namespace Occ {
     regions?: Region[];
   }
 
+  export interface AddressList {
+    addresses?: Address[];
+  }
+
   /**
    *
    * An interface representing Address.
@@ -98,6 +102,10 @@ export namespace Occ {
      */
     phone?: string;
     /**
+     * @member {string} [town]
+     */
+    cellphone?: string;
+    /**
      * @member {string} [postalCode]
      */
     postalCode?: string;
@@ -105,6 +113,10 @@ export namespace Occ {
      * @member {Region} [region]
      */
     region?: Region;
+    /**
+     * @member {string} [town]
+     */
+    district?: string;
     /**
      * @member {boolean} [shippingAddress]
      */
@@ -468,6 +480,10 @@ export namespace Occ {
      * @member {string} [slotStatus]
      */
     slotStatus?: string;
+    /**
+     * @member {any} [properties]
+     */
+    properties?: any;
   }
 
   /**
@@ -514,6 +530,26 @@ export namespace Occ {
      * @member {string} [uid]
      */
     uid?: string;
+    /**
+     * @member {string} [label]
+     */
+    label?: string;
+    /**
+     * @member {any} [properties]
+     */
+    properties?: any;
+
+    robotTag?: PageRobots;
+  }
+
+  /**
+   * The page robot information is exposed with 4 string values.
+   */
+  export enum PageRobots {
+    INDEX_FOLLOW = 'INDEX_FOLLOW',
+    NOINDEX_FOLLOW = 'NOINDEX_FOLLOW',
+    INDEX_NOFOLLOW = 'INDEX_NOFOLLOW',
+    NOINDEX_NOFOLLOW = 'NOINDEX_NOFOLLOW',
   }
 
   /**
@@ -1457,6 +1493,64 @@ export namespace Occ {
      * @member {boolean} [updateable]
      */
     updateable?: boolean;
+    /**
+     * @member {StatusSummary[]} [statusSummaryList]
+     */
+    statusSummaryList?: StatusSummary[];
+    /**
+     * @member {ConfigurationInfo[]} [configurationInfos]
+     */
+    configurationInfos?: ConfigurationInfo[];
+  }
+
+  /**
+   *
+   * An interface representing ConfigurationInfo.
+   * Provides information about configuration values of the entry.
+   */
+  export interface ConfigurationInfo {
+    /**
+     * @member {string} [configurationLabel]
+     */
+    configurationLabel?: string;
+    /**
+     * @member {string} [configurationValue]
+     */
+    configurationValue?: string;
+    /**
+     * @member {string} [configuratorType]
+     */
+    configuratorType?: string;
+    /**
+     * @member {string} [status]
+     */
+    status?: string;
+  }
+
+  /**
+   * Possible order entry statuses
+   */
+  export enum OrderEntryStatus {
+    Success = 'SUCCESS',
+    Info = 'INFO',
+    Warning = 'WARNING',
+    Error = 'ERROR',
+  }
+
+  /**
+   *
+   * An interface representing StatusSummary.
+   * Provides status including number of issues for configurable entry.
+   */
+  export interface StatusSummary {
+    /**
+     * @member {number} [numberOfIssues]
+     */
+    numberOfIssues?: number;
+    /**
+     * @member {string} [status]
+     */
+    status?: OrderEntryStatus;
   }
 
   /**
@@ -4169,41 +4263,6 @@ export namespace Occ {
     sorts?: SortModel[];
   }
 
-  export interface B2BAddress {
-    cellphone?: string;
-    companyName?: string;
-    country?: {
-      isocode?: string;
-      name?: string;
-    };
-    defaultAddress?: true;
-    district?: string;
-    email?: string;
-    firstName?: string;
-    formattedAddress?: string;
-    id?: string;
-    lastName?: string;
-    line1?: string;
-    line2?: string;
-    phone?: string;
-    postalCode?: string;
-    region?: {
-      countryIso?: string;
-      isocode?: string;
-      isocodeShort?: string;
-      name?: string;
-    };
-    shippingAddress?: true;
-    title?: string;
-    titleCode?: string;
-    town?: string;
-    visibleInAddressBook?: true;
-  }
-
-  export interface B2BAddressList {
-    addresses?: B2BAddress[];
-  }
-
   export interface B2BUnitNode {
     active?: boolean;
     children?: B2BUnitNode[];
@@ -4241,16 +4300,17 @@ export namespace Occ {
 
   export interface B2BUnit {
     active?: boolean;
-    addresses?: B2BAddress[];
+    addresses?: Address[];
     uid?: string;
     name?: string;
-    parentOrgUnit?: string;
+    parentOrgUnit?: Partial<B2BUnit>;
     approvalProcess?: B2BApprovalProcess;
     administrators?: B2BUser[];
     approvers?: B2BUser[];
     customers?: B2BUser[];
     managers?: B2BUser[];
   }
+
   export interface OrderApprovalPermissionType {
     code?: string;
     name?: string;
@@ -4285,6 +4345,82 @@ export namespace Occ {
     sorts?: SortModel[];
   }
 
+  export interface ReplenishmentOrder {
+    active?: boolean;
+    appliedOrderPromotions?: PromotionResult[];
+    appliedProductPromotions?: PromotionResult[];
+    appliedVouchers?: Voucher[];
+    calculated?: boolean;
+    code?: string;
+    costCenter?: CostCenter;
+    deliveryAddress?: Address;
+    deliveryCost?: Price;
+    deliveryItemsQuantity?: number;
+    deliveryMode?: DeliveryMode;
+    deliveryOrderGroups?: DeliveryOrderEntryGroup[];
+    description?: string;
+    entries?: OrderEntry[];
+    expirationTime?: string;
+    firstDate?: string;
+    guid?: string;
+    name?: string;
+    net?: boolean;
+    orderDiscounts?: Price;
+    paymentInfo?: PaymentDetails;
+    paymentStatus?: string;
+    paymentType?: PaymentType;
+    pickupItemsQuantity?: number;
+    pickupOrderGroups?: PickupOrderEntryGroup[];
+    potentialOrderPromotions?: PromotionResult[];
+    potentialProductPromotions?: PromotionResult[];
+    productDiscounts?: Price;
+    purchaseOrderNumber?: string;
+    replenishmentOrderCode?: string;
+    saveTime?: string;
+    savedBy?: Principal;
+    site?: string;
+    store?: string;
+    subTotal?: Price;
+    totalDiscounts?: Price;
+    totalItems?: number;
+    totalPrice?: Price;
+    totalPriceWithTax?: Price;
+    totalTax?: Price;
+    totalUnitCount?: number;
+    trigger?: Trigger;
+    user?: Principal;
+  }
+
+  export interface ReplenishmentOrderList {
+    replenishmentOrders?: ReplenishmentOrder[];
+    pagination?: PaginationModel;
+    sorts?: SortModel[];
+  }
+
+  export interface Trigger {
+    activationTime?: string;
+    displayTimeTable?: string;
+  }
+
+  export interface ScheduleReplenishmentForm {
+    daysOfWeek?: DaysOfWeek[];
+    nthDayOfMonth?: string;
+    numberOfDays?: string;
+    numberOfWeeks?: string;
+    recurrencePeriod?: string;
+    replenishmentStartDate?: string;
+  }
+
+  export enum DaysOfWeek {
+    MONDAY = 'MONDAY',
+    TUESDAY = 'TUESDAY',
+    WEDNESDAY = 'WEDNESDAY',
+    THURSDAY = 'THURSDAY',
+    FRIDAY = 'FRIDAY',
+    SATURDAY = 'SATURDAY',
+    SUNDAY = 'SUNDAY',
+  }
+
   export enum OrderApprovalDecisionValue {
     APPROVE = 'APPROVE',
     REJECT = 'REJECT',
@@ -4299,11 +4435,6 @@ export namespace Occ {
     comments?: string;
     permissionTypes?: OrderApprovalPermissionType[];
     statusDisplay?: string;
-  }
-
-  export interface Trigger {
-    activationTime?: string;
-    displayTimeTable?: string;
   }
 
   export interface OrderApproval {

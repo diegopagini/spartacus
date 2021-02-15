@@ -1,8 +1,8 @@
 import { PLATFORM_ID } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { CmsConfig, DeferLoadingStrategy } from '@spartacus/core';
-import { CmsComponentsService } from './cms-components.service';
 import { Subject } from 'rxjs';
+import { CmsComponentsService } from './cms-components.service';
 import { FeatureModulesService } from './feature-modules.service';
 import createSpy = jasmine.createSpy;
 
@@ -10,6 +10,7 @@ let service: CmsComponentsService;
 
 const mockConfig: CmsConfig = {
   cmsComponents: {
+    testCode: {},
     exampleMapping1: {
       component: 'selector-1',
       i18nKeys: ['key-1'],
@@ -22,6 +23,18 @@ const mockConfig: CmsConfig = {
       i18nKeys: ['key-1', 'key-2'],
       guards: ['guard1'],
       deferLoading: DeferLoadingStrategy.INSTANT,
+    },
+    exampleMapping3: {
+      component: 'selector-3',
+      childRoutes: {
+        parent: { data: { test: 'parent data' } },
+        children: [{ path: 'route1' }, { path: 'route2' }],
+      },
+    },
+    staticComponent: {
+      data: {
+        foo: 'bar',
+      } as any,
     },
   },
 };
@@ -36,7 +49,7 @@ class MockFeatureModulesService implements Partial<FeatureModulesService> {
   private testResovler = new Subject();
 
   hasFeatureFor = createSpy().and.callFake((type) => type === 'feature');
-  getInjectors = createSpy();
+  getModule = createSpy();
 
   getCmsMapping() {
     return this.testResovler;
@@ -95,6 +108,16 @@ describe('CmsComponentsService', () => {
     });
   });
 
+  describe('getStaticData', () => {
+    it('should not return static data', () => {
+      expect(service.getStaticData('exampleMapping1')).toBeUndefined();
+    });
+
+    it('should return static data', () => {
+      expect(service.getStaticData<any>('staticComponent').foo).toEqual('bar');
+    });
+  });
+
   describe('shouldRender', () => {
     it('should return true for disableSrr not set', () => {
       expect(service.shouldRender('exampleMapping1')).toBeTruthy();
@@ -114,11 +137,17 @@ describe('CmsComponentsService', () => {
   });
 
   describe('getChildRoutes', () => {
-    it('should get routes from page data', () => {
-      expect(service.getChildRoutes(mockComponents)).toEqual([
-        { path: 'route1' },
-        { path: 'route2' },
-      ]);
+    it('should get child routes from page data', () => {
+      expect(service.getChildRoutes(mockComponents)).toEqual({
+        children: [{ path: 'route1' }, { path: 'route2' }],
+      });
+    });
+
+    it('should get parent and child routes from page data', () => {
+      expect(service.getChildRoutes(['exampleMapping3'])).toEqual({
+        parent: { data: { test: 'parent data' } },
+        children: [{ path: 'route1' }, { path: 'route2' }],
+      });
     });
   });
 
@@ -134,18 +163,16 @@ describe('CmsComponentsService', () => {
     });
   });
 
-  describe('getInjectors', () => {
+  describe('getModule', () => {
     it('should call FeatureModulesService', () => {
       const featureModulesService = TestBed.inject(FeatureModulesService);
-      service.getInjectors('feature');
-      expect(featureModulesService.getInjectors).toHaveBeenCalledWith(
-        'feature'
-      );
+      service.getModule('feature');
+      expect(featureModulesService.getModule).toHaveBeenCalledWith('feature');
     });
     it('should not call FeatureModulesService if there is no such a feature', () => {
       const featureModulesService = TestBed.inject(FeatureModulesService);
-      service.getInjectors('unknownType');
-      expect(featureModulesService.getInjectors).not.toHaveBeenCalled();
+      service.getModule('unknownType');
+      expect(featureModulesService.getModule).not.toHaveBeenCalled();
     });
   });
 });
