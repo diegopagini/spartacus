@@ -458,7 +458,7 @@
       "prefix": "cx",
       "architect": {
         "build": {
-          "builder": "@angular-devkit/build-ng-packagr:build",
+          "builder": "@angular-devkit/build-angular:build",
           "options": {
             "tsConfig": "feature-libs/product-configurator/tsconfig.lib.json",
             "project": "feature-libs/product-configurator/ng-package.json"
@@ -572,7 +572,7 @@
       "prefix": "cx",
       "architect": {
         "build": {
-          "builder": "@angular-devkit/build-ng-packagr:build",
+          "builder": "@angular-devkit/build-angular:build",
           "options": {
             "tsConfig": "feature-libs/storefinder/tsconfig.lib.json",
             "project": "feature-libs/storefinder/ng-package.json"
@@ -610,7 +610,7 @@
       "prefix": "cx",
       "architect": {
         "build": {
-          "builder": "@angular-devkit/build-ng-packagr:build",
+          "builder": "@angular-devkit/build-angular:build",
           "options": {
             "tsConfig": "feature-libs/qualtrics/tsconfig.lib.json",
             "project": "feature-libs/qualtrics/ng-package.json"
